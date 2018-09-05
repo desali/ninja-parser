@@ -47,6 +47,13 @@ namespace :anime do
         @years = get_years()
 
         @years.each do |year|
+            # For heroku (2018 and 2017 parsed already)
+
+            if year[:title] == '2018' || year[:title] == '2017'
+                puts "Skipping 2018 or 2017"
+                next
+            end
+
             # puts "YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR"
             puts "Parsing #{year[:title]} year!"
 
