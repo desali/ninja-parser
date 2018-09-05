@@ -6,9 +6,11 @@ class Api::V1::RequestsController < ApplicationController
     end
 
     def getMovie
-        @anime = Anime.find_by(id: anime_params)
+        @anime = Anime.find_by(id: anime_params[:id])
 
         if @anime
+            puts @anime.to_json
+            puts @anime.movies.to_json
             @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Openings" }
             render json: {
                 'status': true,
