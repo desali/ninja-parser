@@ -1,16 +1,16 @@
 # coding: utf-8
 
-namespace :ninja do
-    desc "Parsing openings.ninja!"
+namespace :anime do
+    desc "Parsing openings.ninja with shikimori!"
 
     require "nokogiri"
     require "open-uri"
-    # require 'json'
-    # require 'date'
-    # require 'net/http'
+    require "json"
+
 
     @root_url = "https://openings.ninja"
     @ext_for_year = "/season"
+    @ext_url_for_shikimori = "https://shikimori.org/animes?search="
 
     # Variables for test
     @year_href_test = '/season/2002'
@@ -19,39 +19,62 @@ namespace :ninja do
     # Variables for full
     # @_full = ''
 
+
     task :get_all => :environment do
         puts "PARSING STARTED!"
+        start_time = Time.now
 
         @years = get_years()
 
         @years.each do |year|
-            puts "YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR"
+            # puts "YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR"
             puts "Parsing #{year[:title]} year!"
 
-            @seasons = get_animes_from_year(year[:href])
-            @seasons.each do |season|
-                puts "SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON"
-                puts "Parsing #{season[:title]}!"
+            @year = Year.find_by(title: year[:title]) || create_year(year[:title])
 
-                season[:animes].each do |anime|
-                    puts "ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME"
-                    puts "Parsing #{anime[:title]} anime!"
+            if @year
+                @seasons = get_animes_from_year(year[:href])
+                @seasons.each do |season|
+                    # puts "SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON SEASON"
+                    puts "Parsing #{season[:title]}!"
+                    @season = Season.find_by(title: season[:title]) || create_season(season[:title])
 
-                    @info = get_info_from_anime(anime[:href])
+                    if @season
+                        season[:animes].each do |anime|
+                            # puts "ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME ANIME"
+                            puts "Parsing #{anime[:title]} anime!"
+                            puts "Link to anime #{anime[:href]}"
 
-                    @info.each do |info|
-                        puts "Parsing #{info[:title]}"
+                            @anime = create_anime(anime[:title], anime[:title_ru], @season[:id], @year[:id], anime[:rating_value], anime[:views_count])
 
-                        info[:movies].each do |movie|
-                            puts "Parsing #{movie[:title]}"
+                            if @anime
+                                @info = get_info_from_anime(anime[:href])
 
-                            movie[:links].each do |link|
-                                puts "Link source #{link[:source]}"
-                                puts "Link url #{link[:url]}"
+                                @info.each do |info|
+                                    puts "Parsing #{info[:title]}"
+
+                                    info[:movies].each do |movie|
+                                        puts "Parsing #{movie[:title]}"
+
+                                        movie[:links].each do |link|
+                                            puts "Link source #{link[:source]}"
+                                            puts "Link url #{link[:url]}"
+
+                                            @movie = create_movie(movie[:title], @anime[:id], info[:title], link[:source], link[:url])
+                                        end
+                                    end
+                                end
+                            else
+                                # If anime doesnt created
                             end
                         end
+
+                    else
+                        # If there is no season or doesnt created
                     end
                 end
+            else
+                # If year doesnt created
             end
         end
     end
@@ -76,6 +99,7 @@ namespace :ninja do
 
         puts @info
     end
+
 
     def get_years()
         @years = []
@@ -118,10 +142,89 @@ namespace :ninja do
                 @anime_title = anime.text
                 @anime_href = anime['href']
 
-                @seasons.last[:animes].push({
-                        'title': @anime_title,
-                        'href': @anime_href
-                    })
+                @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime_title}")), nil, 'UTF-8')
+
+                if @shikimori_html.css('.cover')[0]
+                    if @shikimori_html.css('.cover')[0].css('.name-ru')[0]
+                        @anime_title_ru = @shikimori_html.css('.cover')[0].css('.name-ru')[0]['data-text']
+                    else
+                        @anime_title_ru = @anime_title
+                    end
+
+                    @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
+
+                    @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}")), nil, 'UTF-8')
+
+                    @scores_html = @shikimori_anime_html.css('.scores')[0]
+                    @scores_html.css('meta').each do |meta|
+                        if meta['itemprop'] == 'bestRating'
+                            @rating_full = meta['content']
+                        elsif meta['itemprop'] == 'ratingValue'
+                            @rating_value = meta['content']
+                        elsif meta['itemprop'] == 'ratingCount'
+                            @rating_count = meta['content']
+                        end
+                    end
+
+                    @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
+
+                    @views_json.each do |stat|
+                        if stat['name'] == 'Просмотрено'
+                            @watched_count = stat['value']
+                        elsif stat['name'] == 'Смотрю'
+                            @watching_count = stat['value']
+                        end
+                    end
+
+                    @views_count = (@watched_count + (@watching_count * 0.8)).to_i
+
+                    @seasons.last[:animes].push({
+                            'title': @anime_title,
+                            'title_ru': @anime_title_ru,
+                            'href': @anime_href,
+                            'rating_value': @rating_value,
+                            'rating_full': @rating_full,
+                            'rating_count': @rating_count,
+                            'watched_count': @watched_count,
+                            'views_count': @views_count
+                        })
+                else
+                    @shikimori_anime_html = @shikimori_html
+
+                    @scores_html = @shikimori_anime_html.css('.scores')[0]
+                    @scores_html.css('meta').each do |meta|
+                        if meta['itemprop'] == 'bestRating'
+                            @rating_full = meta['content']
+                        elsif meta['itemprop'] == 'ratingValue'
+                            @rating_value = meta['content']
+                        elsif meta['itemprop'] == 'ratingCount'
+                            @rating_count = meta['content']
+                        end
+                    end
+
+                    @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
+
+                    @views_json.each do |stat|
+                        if stat['name'] == 'Просмотрено'
+                            @watched_count = stat['value']
+                        elsif stat['name'] == 'Смотрю'
+                            @watching_count = stat['value']
+                        end
+                    end
+
+                    @views_count = (@watched_count + (@watching_count * 0.8)).to_i
+
+                    @seasons.last[:animes].push({
+                            'title': @anime_title,
+                            'title_ru': @anime_title_ru,
+                            'href': @anime_href,
+                            'rating_value': @rating_value,
+                            'rating_full': @rating_full,
+                            'rating_count': @rating_count,
+                            'watched_count': @watched_count,
+                            'views_count': @views_count
+                        })
+                end
             end
         end
 
@@ -182,14 +285,64 @@ namespace :ninja do
         return @info
     end
 
-    # def create_()
-    #   @ = .new()
-    #   if @.save
-    #     puts "!"
-    #     puts @
-    #   else
-    #     puts "Error occured while creating .!"
-    #     puts @.errors.full_messages
-    #   end
-    # end
+
+    def create_year(title)
+      @year = Year.new(title: title)
+      if @year.save
+        puts "Year created!"
+        puts @year
+
+        return @year
+      else
+        puts "Error occured while creating year!"
+        puts @year.errors.full_messages
+
+        return false
+      end
+    end
+
+    def create_season(title)
+      @season = Season.new(title: title)
+      if @season.save
+        puts "Season created!"
+        puts @season
+
+        return @season
+      else
+        puts "Error occured while creating season!"
+        puts @season.errors.full_messages
+
+        return false
+      end
+    end
+
+    def create_anime(title, title_ru, season_id, year_id, rating, views)
+      @anime = Anime.new(title: title, title_ru: title_ru, season_id: season_id, year_id: year_id, rating: rating, views: views)
+      if @anime.save
+        puts "Anime created!"
+        puts @anime
+
+        return @anime
+      else
+        puts "Error occured while creating anime!"
+        puts @anime.errors.full_messages
+
+        return false
+      end
+    end
+
+    def create_movie(title, anime_id, type, source, link)
+      @movie = Movie.new(title: title, anime_id: anime_id, type: type, source: source, link: link)
+      if @movie.save
+        puts "Movie created!"
+        puts @movie
+
+        return @movie
+      else
+        puts "Error occured while creating movie!"
+        puts @movie.errors.full_messages
+
+        return false
+      end
+    end
 end

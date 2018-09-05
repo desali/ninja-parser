@@ -1,0 +1,32 @@
+# == Schema Information
+#
+# Table name: animes
+#
+#  id         :integer          not null, primary key
+#  title      :string
+#  title_ru   :string
+#  rating     :decimal(, )
+#  views      :integer
+#  season_id  :integer
+#  year_id    :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  title_ru: MyString
+  rating: 
+  views: 1
+  season_id: 1
+  year_id: 1
+
+two:
+  title: MyString
+  title_ru: MyString
+  rating: 
+  views: 1
+  season_id: 1
+  year_id: 1
