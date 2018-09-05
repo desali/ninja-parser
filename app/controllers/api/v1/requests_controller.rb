@@ -1,16 +1,15 @@
 class Api::V1::RequestsController < ApplicationController
 
     def shuffle
-        @shuffle = [1..Anime.count].shuffle
+        @shuffle = [1..(Anime.count)].shuffle
         # render json: @user.errors
+        render json: @shuffle
     end
 
     def getMovie
         @anime = Anime.find_by(id: anime_params[:id])
 
         if @anime
-            puts @anime.to_json
-            puts @anime.movies.to_json
             @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Openings" }
             render json: {
                 'status': true,

@@ -142,7 +142,8 @@ namespace :anime do
                 @anime_title = anime.text
                 @anime_href = anime['href']
 
-                @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime_title}"), 'User-Agent' => 'Nooby'), nil, 'UTF-8')
+                sleep(5)
+                @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime_title}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
 
                 if @shikimori_html.css('.cover')[0]
                     if @shikimori_html.css('.cover')[0].css('.name-ru')[0]
@@ -153,7 +154,8 @@ namespace :anime do
 
                     @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
 
-                    @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Nooby'), nil, 'UTF-8')
+                    sleep(5)
+                    @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
 
                     @scores_html = @shikimori_anime_html.css('.scores')[0]
                     @scores_html.css('meta').each do |meta|
