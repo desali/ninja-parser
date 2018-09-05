@@ -331,8 +331,8 @@ namespace :anime do
       end
     end
 
-    def create_movie(title, anime_id, type, source, link)
-      @movie = Movie.new(title: title, anime_id: anime_id, type: type, source: source, link: link)
+    def create_movie(title, anime_id, theme, source, link)
+      @movie = Movie.new(title: title, anime_id: anime_id, theme: theme, source: source, link: link)
       if @movie.save
         puts "Movie created!"
         puts @movie

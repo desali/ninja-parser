@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 2018_09_05_165959) do
   create_table "movies", force: :cascade do |t|
     t.string "title"
     t.integer "anime_id"
-    t.string "type"
+    t.string "theme"
     t.string "source"
     t.string "link"
     t.datetime "created_at", null: false

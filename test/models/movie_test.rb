@@ -5,7 +5,7 @@
 #  id         :integer          not null, primary key
 #  title      :string
 #  anime_id   :integer
-#  type       :string
+#  theme      :string
 #  source     :string
 #  link       :string
 #  created_at :datetime         not null
