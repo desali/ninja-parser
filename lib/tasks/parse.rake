@@ -49,8 +49,8 @@ namespace :anime do
         @years.each do |year|
             # For heroku (2018 and 2017 parsed already)
 
-            if year[:title] == '2018' || year[:title] == '2017'
-                puts "Skipping 2018 or 2017"
+            if year[:title] == '2018' || year[:title] == '2017' || year[:title] == '2016'
+                puts "Skipping 2018 or 2017 or 2016"
                 next
             end
 
