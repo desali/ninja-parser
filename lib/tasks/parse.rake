@@ -153,7 +153,7 @@ namespace :anime do
 
                     @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
 
-                    @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}")), nil, 'UTF-8')
+                    @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Nooby'), nil, 'UTF-8')
 
                     @scores_html = @shikimori_anime_html.css('.scores')[0]
                     @scores_html.css('meta').each do |meta|
