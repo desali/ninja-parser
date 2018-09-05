@@ -13,12 +13,32 @@ namespace :anime do
     @ext_url_for_shikimori = "https://shikimori.org/animes?search="
 
     # Variables for test
-    @year_href_test = '/season/2002'
+    @year_href_test = '/season/2016'
     @anime_href_test = '/Pokemon+Best+Wishes!+Season+2:+Episode+N/op/1'
 
     # Variables for full
     # @_full = ''
 
+    task :check => :environment do
+        @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("https://shikimori.org/animes/36286-re-zero-kara-hajimeru-isekai-seikatsu-memory-snow"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
+
+        if (@shikimori_anime_html.css('.scores')[0])
+            @scores_html = @shikimori_anime_html.css('.scores')[0]
+            @scores_html.css('meta').each do |meta|
+                if meta['itemprop'] == 'bestRating'
+                    @rating_full = meta['content']
+                elsif meta['itemprop'] == 'ratingValue'
+                    @rating_value = meta['content']
+                elsif meta['itemprop'] == 'ratingCount'
+                    @rating_count = meta['content']
+                end
+            end
+        else
+            @rating_full = 0
+            @rating_value = 0
+            @rating_count = 0
+        end
+    end
 
     task :get_all => :environment do
         puts "PARSING STARTED!"
@@ -142,7 +162,7 @@ namespace :anime do
                 @anime_title = anime.text
                 @anime_href = anime['href']
 
-                sleep(5)
+                sleep(2)
                 @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime_title}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
 
                 if @shikimori_html.css('.cover')[0]
@@ -154,18 +174,25 @@ namespace :anime do
 
                     @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
 
-                    sleep(5)
+                    sleep(2)
                     @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
+                    puts "#{@anime_shikimori_href}"
 
-                    @scores_html = @shikimori_anime_html.css('.scores')[0]
-                    @scores_html.css('meta').each do |meta|
-                        if meta['itemprop'] == 'bestRating'
-                            @rating_full = meta['content']
-                        elsif meta['itemprop'] == 'ratingValue'
-                            @rating_value = meta['content']
-                        elsif meta['itemprop'] == 'ratingCount'
-                            @rating_count = meta['content']
+                    if (@shikimori_anime_html.css('.scores')[0])
+                        @scores_html = @shikimori_anime_html.css('.scores')[0]
+                        @scores_html.css('meta').each do |meta|
+                            if meta['itemprop'] == 'bestRating'
+                                @rating_full = meta['content']
+                            elsif meta['itemprop'] == 'ratingValue'
+                                @rating_value = meta['content']
+                            elsif meta['itemprop'] == 'ratingCount'
+                                @rating_count = meta['content']
+                            end
                         end
+                    else
+                        @rating_full = 0
+                        @rating_value = 0
+                        @rating_count = 0
                     end
 
                     @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
