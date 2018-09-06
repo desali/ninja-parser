@@ -47,13 +47,6 @@ namespace :anime do
         @years = get_years()
 
         @years.each do |year|
-            # For heroku (2018 and 2017 parsed already)
-
-            if year[:title] == '2018' || year[:title] == '2017' || year[:title] == '2016'
-                puts "Skipping 2018 or 2017 or 2016"
-                next
-            end
-
             # puts "YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR YEAR"
             puts "Parsing #{year[:title]} year!"
 
@@ -72,7 +65,7 @@ namespace :anime do
                             puts "Parsing #{anime[:title]} anime!"
                             puts "Link to anime #{anime[:href]}"
 
-                            @anime = create_anime(anime[:title], anime[:title_ru], @season[:id], @year[:id], anime[:rating_value], anime[:views_count])
+                            @anime = Anime.find_by(title: anime[:title]) || create_anime(anime[:title], anime[:title_ru], @season[:id], @year[:id], anime[:rating_value], anime[:views_count])
 
                             if @anime
                                 @info = get_info_from_anime(anime[:href])
@@ -87,7 +80,7 @@ namespace :anime do
                                             puts "Link source #{link[:source]}"
                                             puts "Link url #{link[:url]}"
 
-                                            @movie = create_movie(movie[:title], @anime[:id], info[:title], link[:source], link[:url])
+                                            @movie = Movie.find_by(title: movie[:title]) ||  create_movie(movie[:title], @anime[:id], info[:title], link[:source], link[:url])
                                         end
                                     end
                                 end
