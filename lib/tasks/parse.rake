@@ -169,7 +169,7 @@ namespace :anime do
                 @anime_title = anime.text
                 @anime_href = anime['href']
 
-                sleep(2)
+                # sleep(2)
                 @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime_title}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
 
                 if @shikimori_html.css('.cover')[0]
@@ -181,7 +181,7 @@ namespace :anime do
 
                     @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
 
-                    sleep(2)
+                    # sleep(2)
                     @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
                     puts "#{@anime_shikimori_href}"
 
@@ -271,8 +271,10 @@ namespace :anime do
         @info = []
 
         @anime_title_href = anime.split('/op')[0]
+        puts @anime_title_href
+        puts "#{@root_url}#{anime}"
 
-        html = Nokogiri::HTML(open("#{@root_url}#{anime}"), nil, 'UTF-8')
+        html = Nokogiri::HTML(open(URI.escape("#{@root_url}#{@anime_title_href}/")), nil, 'UTF-8')
 
         @info_html = html.css('#themes')[0]
 
