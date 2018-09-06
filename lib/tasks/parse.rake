@@ -47,7 +47,7 @@ namespace :anime do
         @years = get_years()
 
         @years.each do |year|
-            if year[:title] == "2018" || year[:title] == "2017" year[:title] == "2016" || year[:title] == "2015"
+            if year[:title] == "2018" || year[:title] == "2017" || year[:title] == "2016" || year[:title] == "2015"
                 puts "Skiping year!"
                 next
             end
