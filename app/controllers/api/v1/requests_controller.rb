@@ -41,7 +41,7 @@ class Api::V1::RequestsController < ApplicationController
     end
 
     def getMovie
-        @anime = Anime.find_by(id: anime_params[:id])
+        @anime = Anime.find_by(id: params[:id])
 
         if @anime
             @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Openings" }
@@ -56,10 +56,5 @@ class Api::V1::RequestsController < ApplicationController
                 'desc': "Wrong id!"
             }
         end
-    end
-
-    private
-    def anime_params
-        params.permit(:id)
     end
 end
