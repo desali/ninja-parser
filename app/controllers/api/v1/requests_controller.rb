@@ -11,7 +11,6 @@ class Api::V1::RequestsController < ApplicationController
         @shuffle_demo = [*1..Anime.count].shuffle
         @shuffle_demo -= @shuffle[0]
         @shuffle[0] += @shuffle_demo
-        puts @shuffle[0]
 
         @answers_list = [*1..Anime.count].shuffle
 
@@ -45,6 +44,11 @@ class Api::V1::RequestsController < ApplicationController
 
         if @anime
             @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Openings" }
+
+            if !@movie
+                @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Endings" }
+            end
+
             render json: {
                 'status': true,
                 'title': @anime[:title_ru],
