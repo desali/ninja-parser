@@ -14,7 +14,7 @@
 #
 
 class Anime < ApplicationRecord
-    belongs_to :season
-    belongs_to :year
+    # belongs_to :season
+    # belongs_to :year
     has_many :movies
 end
