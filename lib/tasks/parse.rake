@@ -71,21 +71,25 @@ namespace :anime do
                             @rating_count = 0
                         end
 
-                        @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
+                        if (!@shikimori_anime_html.css('#rates_statuses_stats')[0])
+                            next
+                        else
+                            @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
 
-                        @views_json.each do |stat|
-                            if stat['name'] == 'Просмотрено'
-                                @watched_count = stat['value']
-                            elsif stat['name'] == 'Смотрю'
-                                @watching_count = stat['value']
+                            @views_json.each do |stat|
+                                if stat['name'] == 'Просмотрено'
+                                    @watched_count = stat['value']
+                                elsif stat['name'] == 'Смотрю'
+                                    @watching_count = stat['value']
+                                end
                             end
+
+                            @views_count = (@watched_count + (@watching_count * 0.8)).to_i
+                            puts @views_count
+
+                            @anime = Anime.create(title: @anime_title, title_ru: @anime_title_ru, views: @views_count)
+                            Movie.create(title: movie["title"], anime_id: @anime[:id], theme: @movie_theme, link: @movie_link)
                         end
-
-                        @views_count = (@watched_count + (@watching_count * 0.8)).to_i
-                        puts @views_count
-
-                        @anime = Anime.create(title: @anime_title, title_ru: @anime_title_ru, views: @views_count)
-                        Movie.create(title: movie["title"], anime_id: @anime[:id], theme: @movie_theme, link: @movie_link)
                     else
                         @shikimori_anime_html = @shikimori_html
 
