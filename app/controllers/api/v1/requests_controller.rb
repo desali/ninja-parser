@@ -22,7 +22,7 @@ class Api::V1::RequestsController < ApplicationController
                 @shuffle[1] = @shuffle[1][0..i-1]
                 @shuffle[2] = @shuffle[2][0..i-1]
                 @shuffle[3] = @shuffle[3][0..i-1]
-                @shuffle[0] = @shuffle[0][0..i-1]
+                @shuffle[4] = @shuffle[4][0..i-1]
 
                 break
             end
@@ -48,7 +48,7 @@ class Api::V1::RequestsController < ApplicationController
                @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Endings" }
             end
 
-            return @movie[:link]
+            @movie[:link]
         }
 
         render json: @shuffle
