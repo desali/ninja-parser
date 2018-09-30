@@ -1,7 +1,7 @@
 class Api::V1::RequestsController < ApplicationController
 
     def shuffle
-        @shuffle = [[], [], [], []]
+        @shuffle = [[], [], [], [], []]
 
         @top50 = Anime.order(views: :desc).limit(50)
         @top50.sample(5).each do |sample|
@@ -32,33 +32,24 @@ class Api::V1::RequestsController < ApplicationController
             @shuffle[3][i] = @answers[2]
         end
 
+        @shuffle[4] = @shuffle[0];
+
+        @shuffle[0].map! { |id| Anime.find(id)[:title_ru] }
         @shuffle[1].map! { |id| Anime.find(id)[:title_ru] }
         @shuffle[2].map! { |id| Anime.find(id)[:title_ru] }
         @shuffle[3].map! { |id| Anime.find(id)[:title_ru] }
+        @shuffle[4].map! { |id|
+            @anime = Anime.find(id)
 
-        render json: @shuffle
-    end
-
-    def getMovie
-        @anime = Anime.find_by(id: params[:id])
-
-        if @anime
             @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Openings" }
 
             if !@movie
-                @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Endings" }
+               @movie = @anime.movies.shuffle.find { |m| m[:theme] == "Endings" }
             end
 
-            render json: {
-                'status': true,
-                'title': @anime[:title_ru],
-                'link': @movie[:link]
-            }
-        else
-            render json: {
-                'status': false,
-                'desc': "Wrong id!"
-            }
-        end
+            return @movie[:link]
+        }
+
+        render json: @shuffle
     end
 end

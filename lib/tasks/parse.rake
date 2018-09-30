@@ -23,6 +23,97 @@ namespace :anime do
 
     # Variables for full
     # @_full = ''
+
+    task :check => :environment do
+        @anime = "Hitsugi no Chaika: Avenging Battle"
+
+        @shikimori_html = Nokogiri::HTML(open(URI.escape("#{@ext_url_for_shikimori}#{@anime}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
+        puts "#{@ext_url_for_shikimori}#{@anime}"
+
+        puts @shikimori_html.css('.cover')[0]
+
+        if @shikimori_html.css('.cover')[0]
+            if @shikimori_html.css('.cover')[0].css('.name-ru')[0]
+                @anime_title_ru = @shikimori_html.css('.cover')[0].css('.name-ru')[0]['data-text']
+            else
+                @anime_title_ru = @anime_title
+            end
+
+            @anime_shikimori_href = @shikimori_html.css('.cover')[0]['data-href'] || @shikimori_html.css('.cover')[0]['href']
+
+            sleep(3)
+            @shikimori_anime_html = Nokogiri::HTML(open(URI.escape("#{@anime_shikimori_href}"), 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'), nil, 'UTF-8')
+            puts "#{@anime_shikimori_href}"
+
+            if (@shikimori_anime_html.css('.scores')[0])
+                @scores_html = @shikimori_anime_html.css('.scores')[0]
+                @scores_html.css('meta').each do |meta|
+                    if meta['itemprop'] == 'bestRating'
+                        @rating_full = meta['content']
+                    elsif meta['itemprop'] == 'ratingValue'
+                        @rating_value = meta['content']
+                    elsif meta['itemprop'] == 'ratingCount'
+                        @rating_count = meta['content']
+                    end
+                end
+            else
+                @rating_full = 0
+                @rating_value = 0
+                @rating_count = 0
+            end
+
+            if (!@shikimori_anime_html.css('#rates_statuses_stats')[0])
+                next
+            else
+                @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
+
+                @views_json.each do |stat|
+                    if stat['name'] == 'Просмотрено'
+                        @watched_count = stat['value']
+                    elsif stat['name'] == 'Смотрю'
+                        @watching_count = stat['value']
+                    end
+                end
+
+                @views_count = (@watched_count + (@watching_count * 0.8)).to_i
+                puts @views_count
+
+                @anime = Anime.create(title: @anime_title, title_ru: @anime_title_ru, views: @views_count)
+                Movie.create(title: movie["title"], anime_id: @anime[:id], theme: @movie_theme, link: @movie_link)
+            end
+        else
+            @shikimori_anime_html = @shikimori_html
+
+            @scores_html = @shikimori_anime_html.css('.scores')[0]
+            @scores_html.css('meta').each do |meta|
+                if meta['itemprop'] == 'bestRating'
+                    @rating_full = meta['content']
+                elsif meta['itemprop'] == 'ratingValue'
+                    @rating_value = meta['content']
+                elsif meta['itemprop'] == 'ratingCount'
+                    @rating_count = meta['content']
+                end
+            end
+
+            @views_json = JSON.parse(@shikimori_anime_html.css('#rates_statuses_stats')[0]['data-stats'].to_s)
+
+            @views_json.each do |stat|
+                if stat['name'] == 'Просмотрено'
+                    @watched_count = stat['value']
+                elsif stat['name'] == 'Смотрю'
+                    @watching_count = stat['value']
+                end
+            end
+
+            @views_count = (@watched_count + (@watching_count * 0.8)).to_i
+
+            puts @anime
+            @anime = Anime.create(title: @anime_title, title_ru: @anime_title_ru, views: @views_count)
+            puts @anime
+            Movie.create(title: movie["title"], anime_id: @anime[:id], theme: @movie_theme, link: @movie_link)
+        end
+    end
+
     task :get_animes_moe => :environment do
         @moe_list_html = Nokogiri::HTML(open(URI.escape("#{@moe_url}#{@moe_ext_list}")), nil, 'UTF-8')
         @animes_json = JSON.parse(@moe_list_html.css("p")[0].text.to_s)

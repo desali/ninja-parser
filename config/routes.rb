@@ -3,7 +3,6 @@ Rails.application.routes.draw do
     namespace :api do
         namespace :v1 do
             get "/shuffle", to: "requests#shuffle"
-            get "/movie/:id", to: "requests#getMovie"
         end
     end
 end
